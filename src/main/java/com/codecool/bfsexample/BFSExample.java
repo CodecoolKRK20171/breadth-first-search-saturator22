@@ -6,11 +6,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class BFSExample {
 
-    public static void populateDB(EntityManager em) {
+    public static List<UserNode> populateDB(EntityManager em) {
 
         RandomDataGenerator generator = new RandomDataGenerator();
         List<UserNode> users = generator.generate();
@@ -25,6 +28,8 @@ public class BFSExample {
         GraphPlotter.plot(users);
         
         System.out.println("Done!");
+
+        return users;
     }
 
     public static void main(String[] args) {
@@ -32,6 +37,28 @@ public class BFSExample {
         EntityManager em = emf.createEntityManager();
 
         em.clear();
-        populateDB(em);
+
+        List<UserNode> happyTreeFriends = populateDB(em);
+
+        BreadthFirstSearch breadthFirstSearch = new BreadthFirstSearch();
+
+        breadthFirstSearch.breadthFirstSearch(happyTreeFriends.get(2), happyTreeFriends.get(8));
+        System.out.println(breadthFirstSearch.getDistance());
+
+        breadthFirstSearch.breadthFirstSearch(happyTreeFriends.get(8), happyTreeFriends.get(2));
+        System.out.println(breadthFirstSearch.getDistance());
+
+        Set<UserNode> friendsOfNode = breadthFirstSearch.friendsOfFriends(happyTreeFriends.get(3), 2);
+        Map<UserNode, Integer> userDistance = breadthFirstSearch.getUserDistance();
+        System.out.println("FRIENDS OF "+happyTreeFriends.get(3).getId()+": " + happyTreeFriends.get(3).getFirstName() +
+                            " " + happyTreeFriends.get(3).getLastName());
+        for(UserNode friend: friendsOfNode) {
+            System.out.println("Connection line " + userDistance.get(friend) + "\n" +
+                                "Friend "+friend.getId()+" : " + friend.getFirstName() + " " + friend.getLastName());
+        }
+
+        List<String> shortestPath =
+                breadthFirstSearch.findShortest("Christopher Myles", "Christopher Hillary", happyTreeFriends);
+        System.out.println(shortestPath);
     }
 }
